@@ -1,12 +1,41 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
-import { sites, categories } from "../data/sites";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sites, setSites] = useState([]);
+  const [categories, setCategories] = useState(["All"]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/stores');
+        const data = await response.json();
+        
+        setSites(data.stores);
+        
+        // Extract unique categories and add "All" at the beginning
+        const uniqueCategories = ["All"];
+        data.stores.forEach(store => {
+          if (store.category && !uniqueCategories.includes(store.category)) {
+            uniqueCategories.push(store.category);
+          }
+        });
+        setCategories(uniqueCategories);
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchData();
+  }, []);
   
   const filteredSites = selectedCategory === "All" 
     ? sites 
@@ -39,37 +68,46 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredSites.map((site) => (
-          <Link href={`/site/${site.slug}`} key={site.id} className="group">
-            <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
-              <div className="relative h-60 w-full">
-                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                  <span className="text-gray-500 dark:text-gray-400">{site.title}</span>
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredSites.map((site) => (
+            <Link href={`/site/${site.slug}`} key={site._id} className="group">
+              <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
+                <div className="relative h-60 w-full">
+                  <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <span className="text-gray-500 dark:text-gray-400">{site.title}</span>
+                  </div>
+                  {site.imageUrl && (
+                    <Image
+                      src={site.imageUrl}
+                      alt={site.title}
+                      fill
+                      className="object-cover"
+                    />
+                  )}
                 </div>
-                {/* Uncomment when you have actual images */}
-                {/* <Image
-                  src={site.imageUrl}
-                  alt={site.title}
-                  fill
-                  className="object-cover"
-                /> */}
-              </div>
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <h2 className="text-xl font-bold group-hover:text-blue-600 transition-colors">{site.title}</h2>
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-                    {site.category}
-                  </span>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h2 className="text-xl font-bold group-hover:text-blue-600 transition-colors">{site.title}</h2>
+                    {site.category && (
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                        {site.category}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">{site.description}</p>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm">{site.description}</p>
               </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
-      {filteredSites.length === 0 && (
+      {!loading && filteredSites.length === 0 && (
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-500 dark:text-gray-400">No sites found in this category</h2>
           <p className="mt-2 text-gray-500 dark:text-gray-400">Try selecting a different category</p>
