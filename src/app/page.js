@@ -107,11 +107,11 @@ export default function Home() {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {sites.map((site) => (
-              <Link href={`/site/${site.slug}`} key={site._id} className="group">
+              <Link href={`/site/${site._id}`} key={site._id} className="group">
                 <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
                   <div className="relative h-60 w-full">
                     <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      <span className="text-gray-500 dark:text-gray-400">{site.title}</span>
+                      <span className="text-gray-500 dark:text-gray-400">{site.title || site.domain}</span>
                     </div>
                     {site.imageUrl && (
                       <Image

@@ -20,7 +20,10 @@ export async function GET(request) {
     const skip = (validPage - 1) * validLimit;
     
     // Build the query
-    const query = {};
+    const query = {
+      isShopify: true,
+      'metadata.analysis': { $exists: true }
+    };
     if (category && category !== 'All') {
       query.category = category;
     }

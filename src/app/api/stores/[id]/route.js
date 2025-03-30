@@ -1,21 +1,30 @@
 import { NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Store from '@/models/Store';
+import { ObjectId } from 'mongodb';
 
 export async function GET(request, { params }) {
   try {
     await connectToDatabase();
     
-    const { slug } = params;
+    const { id } = params;
     
-    if (!slug) {
+    if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Slug is required' },
+        { success: false, error: 'ID is required' },
         { status: 400 }
       );
     }
     
-    const store = await Store.findOne({ slug }).lean();
+    let store;
+    try {
+      store = await Store.findOne({ _id: new ObjectId(id) }).lean();
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid ID format' },
+        { status: 400 }
+      );
+    }
     
     if (!store) {
       return NextResponse.json(
