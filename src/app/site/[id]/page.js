@@ -14,8 +14,10 @@ import { ObjectId } from "mongodb";
 //   }));
 // }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata(props) {
+  const { params } = props;
   await connectToDatabase();
+  
   try {
     const store = await Store.findOne({ _id: new ObjectId(params.id) });
     
@@ -38,8 +40,10 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default async function SitePage({ params }) {
+export default async function SitePage(props) {
+  const { params } = props;
   await connectToDatabase();
+  
   try {
     const store = await Store.findOne({ _id: new ObjectId(params.id) });
     

@@ -12,40 +12,61 @@ export async function GET(request) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = 12;
     
-    // Ensure page and limit are valid numbers
+    // Ensure page is a valid number
     const validPage = isNaN(page) || page < 1 ? 1 : page;
-    const validLimit = isNaN(limit) || limit < 1 || limit > 50 ? 12 : limit;
     
     // Calculate skip value for pagination
-    const skip = (validPage - 1) * validLimit;
+    const skip = (validPage - 1) * limit;
     
     // Build the query
     const query = {
       isShopify: true,
       'metadata.analysis': { $exists: true }
     };
+    
     if (category && category !== 'All') {
       query.category = category;
     }
     
+    console.log('Query parameters:', {
+      page,
+      validPage,
+      skip,
+      limit,
+      category,
+      query
+    });
+    
     // Count total documents for pagination metadata
     const totalStores = await Store.countDocuments(query);
+    console.log('Total stores:', totalStores);
     
     // Fetch stores with pagination
     const stores = await Store.find(query)
-      .sort({ title: 1 })
+      .sort({ title: 1, _id: 1 })
       .skip(skip)
-      .limit(validLimit)
-      .lean();
+      .limit(limit)
+      .lean()
+      .exec();
+    
+    console.log('Stores returned:', stores.length);
+    console.log('First store:', stores[0]?.title);
+    console.log('Last store:', stores[stores.length - 1]?.title);
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(totalStores / limit);
+    
+    // Ensure we don't return more pages than we have
+    const currentPage = Math.min(validPage, totalPages);
     
     return NextResponse.json({ 
       success: true, 
       stores: stores,
       pagination: {
-        page: validPage,
-        limit: validLimit,
+        page: currentPage,
+        limit: limit,
         totalStores,
-        totalPages: Math.ceil(totalStores / validLimit)
+        totalPages
       }
     });
   } catch (error) {

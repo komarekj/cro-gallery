@@ -54,13 +54,16 @@ export default function Home() {
         // Construct API URL with pagination and category parameters
         const url = new URL('/api/stores', window.location.origin);
         url.searchParams.append('page', currentPage);
-        url.searchParams.append('limit', itemsPerPage);
         if (selectedCategory !== "All") {
           url.searchParams.append('category', selectedCategory);
         }
         
         const response = await fetch(url);
         const data = await response.json();
+        
+        console.log('Pagination data:', data.pagination);
+        console.log('Current page:', currentPage);
+        console.log('Number of stores:', data.stores.length);
         
         setSites(data.stores);
         setPagination(data.pagination);
